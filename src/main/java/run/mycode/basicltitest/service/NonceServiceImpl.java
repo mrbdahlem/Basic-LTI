@@ -3,11 +3,13 @@ package run.mycode.basicltitest.service;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.stereotype.Service;
 
 /**
  *
  * @author dahlem.brian
  */
+@Service
 public class NonceServiceImpl implements NonceService {
     private final List<Nonce> nonces;
     private final long window;

@@ -6,8 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
-import run.mycode.basicltitest.persistence.model.User;
-
 /**
  *
  * @author dahlem.brian
@@ -20,7 +18,7 @@ public class LtiController {
     public String ltiEntry(HttpServletRequest request, Authentication auth) {
         //LtiLaunch launch = result.getLtiLaunchResult();
         
-        LOG.info("User: " + ((User)auth.getPrincipal()).getName());
+        LOG.info("User: " + auth.getName());
 
         LOG.info("Roles: " + 
                 auth.getAuthorities().stream()

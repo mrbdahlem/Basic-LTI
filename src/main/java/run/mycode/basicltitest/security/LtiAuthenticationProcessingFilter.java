@@ -12,26 +12,40 @@ import org.imsglobal.lti.launch.LtiOauthVerifier;
 import org.imsglobal.lti.launch.LtiVerificationException;
 import org.imsglobal.lti.launch.LtiVerificationResult;
 import org.imsglobal.lti.launch.LtiVerifier;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import org.springframework.web.filter.OncePerRequestFilter;
 import run.mycode.basicltitest.persistence.model.LtiKey;
 import run.mycode.basicltitest.service.KeyService;
+import run.mycode.basicltitest.service.NonceService;
 
 /**
  *
  * @author dahlem.brian
  */
+@Component
 public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
     private static final Logger LOG = LogManager.getLogger(LtiAuthenticationProcessingFilter.class);
     private final KeyService keyService;
+    private final NonceService nonceService;
+
+    @Override
+    protected void initFilterBean() throws ServletException {
+        super.initFilterBean(); 
+        SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
+        
+        LOG.info("nonceService:" + nonceService);
+    }
     
-    public LtiAuthenticationProcessingFilter(KeyService keyService) {
+    public LtiAuthenticationProcessingFilter(KeyService keyService, NonceService nonceService) {
 //        super(AnyRequestMatcher.INSTANCE);
 //        this.setAuthenticationManager(a -> {System.out.println("Auth: " + a); return a;});
         this.keyService = keyService;
+        this.nonceService = nonceService;
     }
     
     @Override
@@ -57,6 +71,11 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
                     return;
                 }
+                
+                String nonce = request.getParameter("oauth_nonce");
+                long timestamp = Long.parseLong(request.getParameter("oauth_timestamp"));
+                
+                nonceService.validateNonce(consumerKey, nonce, timestamp);
 
                 LtiVerificationResult result = ltiVerifier.verify(request, key.getSecret());
 
