@@ -2,7 +2,6 @@ package run.mycode.basicltitest.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,11 +27,11 @@ public class NonceServiceImpl implements NonceService {
         long after = now + (window / 2);
         
         if (timestamp < before || timestamp > after) {
-            throw new BadCredentialsException("Invalid request timestamp");
+            throw new InvalidNonceException("Invalid request timestamp");
         }
         
         if (nonces.stream().anyMatch(n -> n.matches(consumerkey, nonce))) {
-            throw new BadCredentialsException("Duplicate nonce");
+            throw new InvalidNonceException("Duplicate nonce");
         }
         
         nonces.add(new Nonce(consumerkey, nonce, timestamp));

@@ -33,9 +33,4 @@ public class LtiSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 ;
     }
-    
-//    @Bean
-//    public LtiAuthenticationProcessingFilter ltiProcessingFilter() {
-//        return new LtiAuthenticationProcessingFilter(keyService);        
-//    }
 }

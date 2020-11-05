@@ -12,14 +12,13 @@ import org.imsglobal.lti.launch.LtiOauthVerifier;
 import org.imsglobal.lti.launch.LtiVerificationException;
 import org.imsglobal.lti.launch.LtiVerificationResult;
 import org.imsglobal.lti.launch.LtiVerifier;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import org.springframework.web.filter.OncePerRequestFilter;
 import run.mycode.basicltitest.persistence.model.LtiKey;
+import run.mycode.basicltitest.service.InvalidNonceException;
 import run.mycode.basicltitest.service.KeyService;
 import run.mycode.basicltitest.service.NonceService;
 
@@ -32,18 +31,9 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
     private static final Logger LOG = LogManager.getLogger(LtiAuthenticationProcessingFilter.class);
     private final KeyService keyService;
     private final NonceService nonceService;
-
-    @Override
-    protected void initFilterBean() throws ServletException {
-        super.initFilterBean(); 
-        SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
-        
-        LOG.info("nonceService:" + nonceService);
-    }
     
-    public LtiAuthenticationProcessingFilter(KeyService keyService, NonceService nonceService) {
-//        super(AnyRequestMatcher.INSTANCE);
-//        this.setAuthenticationManager(a -> {System.out.println("Auth: " + a); return a;});
+    public LtiAuthenticationProcessingFilter(KeyService keyService, 
+            NonceService nonceService) {
         this.keyService = keyService;
         this.nonceService = nonceService;
     }
@@ -53,11 +43,6 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             HttpServletResponse response, FilterChain chain)
             throws AuthenticationException, ServletException, IOException {
                 Authentication auth;
-        
-//        LOG.info("---------------------------");
-//        for (StackTraceElement ste: Thread.currentThread().getStackTrace()) {
-//            LOG.info("Stack: " + ste);
-//        }
 
         Authentication preAuth = SecurityContextHolder.getContext().getAuthentication();
         if (preAuth == null || !preAuth.isAuthenticated()) {
@@ -91,6 +76,11 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             }
             catch (LtiVerificationException e) {
                 LOG.info("LTI Verification failed");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
+                return;
+            }
+            catch (InvalidNonceException e) {
+                LOG.info("Nonce validation failed: " + e.getLocalizedMessage());
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
                 return;
             }
