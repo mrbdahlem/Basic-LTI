@@ -21,7 +21,9 @@ public class LtiSecurityConfig extends WebSecurityConfigurerAdapter {
     
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().ignoringAntMatchers("/lti/**")
+        http
+            .csrf()
+                .ignoringAntMatchers("/lti/**") // LTI launches are made using HTTP POST, but won't have csrf tokens so must be ignored -- nonce should eliminate csrf
             .and()
             .antMatcher("/lti/**")
                 .headers().frameOptions().disable()

@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import run.mycode.basicltitest.security.LtiLaunchData;
 /**
  *
  * @author dahlem.brian
@@ -16,7 +17,8 @@ public class LtiController {
         
     @PostMapping(value = "/lti/test")
     public String ltiEntry(HttpServletRequest request, Authentication auth) {
-        //LtiLaunch launch = result.getLtiLaunchResult();
+        
+        LtiLaunchData data = (LtiLaunchData)request.getSession().getAttribute(LtiLaunchData.NAME);
         
         LOG.info("User: " + auth.getName());
 
@@ -24,6 +26,8 @@ public class LtiController {
                 auth.getAuthorities().stream()
                         .map(a -> a.getAuthority())
                         .reduce("", String::concat));
+        
+        LOG.info("context_id: " + data.getLaunchParameter("context_id"));
         
         return "success";
     }

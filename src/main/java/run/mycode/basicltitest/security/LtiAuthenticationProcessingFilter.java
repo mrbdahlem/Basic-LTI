@@ -5,6 +5,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.imsglobal.lti.launch.LtiLaunch;
@@ -84,6 +85,9 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
                 return;
             }
+            
+            HttpSession session = request.getSession();
+            session.setAttribute(LtiLaunchData.NAME, new LtiLaunchData(request));
 
             LOG.info("LTI Verification succeeded");
             SecurityContextHolder.getContext().setAuthentication(auth);
