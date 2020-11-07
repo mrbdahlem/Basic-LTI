@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 public class LtiLaunchData {
     public static final String NAME = "LtiLaunchData";
     
-    private final String[] parameters = {
+    private static final String[] parameters = {
         "context_id",
         "context_label",
         "context_title",
@@ -62,7 +62,7 @@ public class LtiLaunchData {
         }
     }
     
-    public String getLaunchParameter(String param) {
+    public String get(String param) {
         return data.get(param);
     }
 }

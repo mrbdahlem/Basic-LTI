@@ -44,13 +44,16 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             HttpServletResponse response, FilterChain chain)
             throws AuthenticationException, ServletException, IOException {
                 Authentication auth;
-
+        
+        LtiKey key;
+        LtiLaunch launch;
+        
         Authentication preAuth = SecurityContextHolder.getContext().getAuthentication();
         if (preAuth == null || !preAuth.isAuthenticated()) {
             try {
                 LtiVerifier ltiVerifier = new LtiOauthVerifier();
                 String consumerKey = request.getParameter("oauth_consumer_key");        
-                LtiKey key = keyService.getKeyInfo(consumerKey);
+                key = keyService.getKeyInfo(consumerKey);
 
                 if (key == null) {
                     LOG.info("Invalid LTI Consumer Key");
@@ -71,9 +74,7 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                LtiLaunch launch = result.getLtiLaunchResult();
-
-                auth = new LtiAuthentication(key, launch, true);
+                launch = result.getLtiLaunchResult();
             }
             catch (LtiVerificationException e) {
                 LOG.info("LTI Verification failed");
@@ -85,9 +86,13 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
                 return;
             }
-            
+
+            LtiLaunchData data = new LtiLaunchData(request);
+            LtiPrincipal user = new LtiPrincipal(launch.getUser(), data);
+            auth = new LtiAuthentication(key, user, true);
+                
             HttpSession session = request.getSession();
-            session.setAttribute(LtiLaunchData.NAME, new LtiLaunchData(request));
+            session.setAttribute(LtiLaunchData.NAME, data);
 
             LOG.info("LTI Verification succeeded");
             SecurityContextHolder.getContext().setAuthentication(auth);

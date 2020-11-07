@@ -3,8 +3,6 @@ package run.mycode.basicltitest.security;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.imsglobal.lti.launch.LtiLaunch;
-import org.imsglobal.lti.launch.LtiUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,20 +14,19 @@ import run.mycode.basicltitest.persistence.model.LtiKey;
  */
 public class LtiAuthentication implements Authentication {
     private final LtiKey key;
-    private final LtiUser principal;
+    private final LtiPrincipal principal;
     private boolean authenticated;
     private final List<SimpleGrantedAuthority> authorities;
-    private final String name;
     
-    public LtiAuthentication(LtiKey key, LtiLaunch launch, boolean authenticated) {
+    public LtiAuthentication(LtiKey key, LtiPrincipal principal,
+            boolean authenticated) {
+        
         this.key = key;
-        this.principal = launch.getUser();
+        this.principal = principal;
         this.authenticated = authenticated;
-        authorities = launch.getUser().getRoles().stream()
+        this.authorities = principal.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role))
                 .collect(Collectors.toList());
-        
-        name = launch.getUser().getId();
     }
     
     @Override
@@ -69,6 +66,6 @@ public class LtiAuthentication implements Authentication {
 
     @Override
     public String getName() {
-        return name;
+        return principal.getName();
     }
 }

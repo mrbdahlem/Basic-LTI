@@ -27,7 +27,7 @@ public class LtiController {
                         .map(a -> a.getAuthority())
                         .reduce("", String::concat));
         
-        LOG.info("context_id: " + data.getLaunchParameter("context_id"));
+        LOG.info("context_id: " + data.get("context_id"));
         
         return "success";
     }
