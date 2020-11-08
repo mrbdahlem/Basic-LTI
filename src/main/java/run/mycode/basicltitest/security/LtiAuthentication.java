@@ -9,7 +9,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import run.mycode.basicltitest.persistence.model.LtiKey;
 
 /**
- *
+ * A Spring Authentication for LTI invocations, associating a tool user 
+ * (student, teacher, etc) with the LtiKey that authorizes their use of the tool
+ * 
  * @author dahlem.brian
  */
 public class LtiAuthentication implements Authentication {

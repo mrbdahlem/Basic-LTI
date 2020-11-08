@@ -1,7 +1,9 @@
 package run.mycode.basicltitest.persistence.model;
 
 /**
- *
+ * A sample user - this would be an instructor/admin that adds this tool to
+ * an LMS
+ * 
  * @author dahlem.brian
  */
 public class User {

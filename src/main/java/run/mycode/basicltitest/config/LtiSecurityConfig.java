@@ -26,13 +26,13 @@ public class LtiSecurityConfig extends WebSecurityConfigurerAdapter {
                 .ignoringAntMatchers("/lti/**") // LTI launches are made using HTTP POST, but won't have csrf tokens so must be ignored -- nonce should eliminate csrf
             .and()
             .antMatcher("/lti/**")
-                .headers().frameOptions().disable()
+                .headers().frameOptions().disable() // Allow launches in iframes
             .and()
                 .addFilterBefore(new LtiAuthenticationProcessingFilter(keyService, nonceService),
-                        UsernamePasswordAuthenticationFilter.class)
+                        UsernamePasswordAuthenticationFilter.class) // Authenticate LTI launches before requiring username/password
             .authorizeRequests()
-                .antMatchers("/lti/**")
-                .permitAll()
+                .antMatchers("/lti/**") // Launches will be made on any of the resources below lti
+                .authenticated()        // and must be authenticated (by the filter)
                 ;
     }
 }

@@ -21,8 +21,9 @@ public class MockKeyService implements KeyService {
         for(int i = 0; i < 10; i++) {
             User u = new User(String.format("USER%03d", i),
                         String.format("ORG%03d", i));
-            System.out.println(String.format("KEY%05d", i));
-            keys.add(new LtiKey(String.format("KEY%05d", i), "secretkey", u));
+            String key = String.format("KEY%05d", i);
+            LOG.debug(key);
+            keys.add(new LtiKey(key, "secretkey", u));
         }
         
         LOG.info("Mock Key Service Initialized");

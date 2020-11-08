@@ -1,7 +1,9 @@
 package run.mycode.basicltitest.persistence.model;
 
 /**
- *
+ * Basic information associating a consumer key with the signing secret and user
+ * that administers the key
+ * 
  * @author dahlem.brian
  */
 public class LtiKey {
