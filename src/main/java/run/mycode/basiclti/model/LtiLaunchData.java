@@ -420,11 +420,22 @@ public class LtiLaunchData {
         this.lisOutcomeServiceUrl = lisOutcomeServiceUrl;
     }
     
+    /**
+     * Get as much of a name as is available from the LTI data
+     * @return a name for the user
+     */
     public String getName() {
         return combineName(lisPersonNameFull, 
                 lisPersonNameFamily, lisPersonNameGiven);
     }
     
+    /**
+     * Get as much of a name as is available from the LTI data from a launch
+     * request
+     * 
+     * @param request the HTTP request containing an LTI launch
+     * @return a name for the user
+     */
     public static String getName(HttpServletRequest request) {
         return combineName(request.getParameter("lis_person_name_full"),
                 request.getParameter("lis_person_name_given"),
