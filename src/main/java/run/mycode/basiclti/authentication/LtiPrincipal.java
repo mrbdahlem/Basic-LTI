@@ -1,4 +1,4 @@
-package run.mycode.basiclti.model;
+package run.mycode.basiclti.authentication;
 
 import java.security.Principal;
 import java.util.List;

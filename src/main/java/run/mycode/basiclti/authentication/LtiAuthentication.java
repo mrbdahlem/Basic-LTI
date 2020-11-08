@@ -1,4 +1,4 @@
-package run.mycode.basiclti.model;
+package run.mycode.basiclti.authentication;
 
 import java.util.Collection;
 import java.util.List;
@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import run.mycode.basiclti.persistence.model.LtiKey;
 
 /**
  * A Spring Authentication for LTI invocations, associating a tool user 
@@ -20,10 +19,17 @@ public class LtiAuthentication implements Authentication {
     private boolean authenticated;
     private final List<SimpleGrantedAuthority> authorities;
     
-    public LtiAuthentication(LtiKey key, LtiPrincipal principal,
+    /**
+     * Construct an authentication token for an LTI launch
+     * 
+     * @param credential the key/secret pair that authorized the launch
+     * @param principal the user (student or instructor) that launched the tool
+     * @param authenticated true if the credential was valid
+     */
+    public LtiAuthentication(LtiKey credential, LtiPrincipal principal,
             boolean authenticated) {
         
-        this.key = key;
+        this.key = credential;
         this.principal = principal;
         this.authenticated = authenticated;
         this.authorities = principal.getRoles().stream()
