@@ -49,6 +49,14 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
      */
     public LtiAuthenticationProcessingFilter(LtiKeyService keyService, 
             NonceService nonceService) {
+        
+        if (keyService == null) {
+            throw new IllegalArgumentException("KeyService must be specified");
+        }
+        if (nonceService == null) {
+            throw new IllegalArgumentException("NonceService must be specified");
+        }
+        
         this.keyService = keyService;
         this.nonceService = nonceService;
     }
