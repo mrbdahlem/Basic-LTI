@@ -2,7 +2,6 @@ package run.mycode.basiclti.service;
 
 import run.mycode.basiclti.authentication.LtiKey;
 
-
 /**
  * A service associating consumer keys with the secret or the user that owns it
  * @author bdahl
