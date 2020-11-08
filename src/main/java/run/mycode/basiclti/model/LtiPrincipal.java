@@ -1,4 +1,4 @@
-package run.mycode.basiclti.security;
+package run.mycode.basiclti.model;
 
 import java.security.Principal;
 import java.util.List;
@@ -14,32 +14,11 @@ public class LtiPrincipal implements Principal {
     private final String name;
     private final LtiUser user;
     
-    public LtiPrincipal(LtiUser user, LtiLaunchData launchData) {
+    public LtiPrincipal(LtiUser user, String name) {
         this.user = user;
-        
-        // Extract as much of a name as possible from the launch data
-        if (launchData.get("lis_person_name_full") != null) {
-            name = launchData.get("lis_person_name_full");
-        }
-        else {
-            String fname = launchData.get("lis_person_name_given");
-            String lname = launchData.get("lis_person_name_family");
-
-            if (fname != null && lname != null) {
-                name = fname + " " + lname;
-            }
-            else if (fname != null) {
-                name = fname;
-            }
-            else if (lname != null) {
-                name = lname;
-            }
-            else {
-                name = null;
-            }
-        }
+        this.name = name;
     }
-    
+        
     @Override
     public String getName() {
         return name;    

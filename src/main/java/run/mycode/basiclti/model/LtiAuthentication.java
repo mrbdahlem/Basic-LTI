@@ -1,4 +1,4 @@
-package run.mycode.basiclti.security;
+package run.mycode.basiclti.model;
 
 import java.util.Collection;
 import java.util.List;

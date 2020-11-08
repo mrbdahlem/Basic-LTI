@@ -1,12 +1,13 @@
 package run.mycode.basiclti.controller;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
-import run.mycode.basiclti.security.LtiLaunchData;
+import run.mycode.basiclti.model.LtiLaunchData;
 
 /**
  *
@@ -17,18 +18,24 @@ public class LtiController {
     private static final Logger LOG = LogManager.getLogger(LtiController.class);
         
     @PostMapping(value = "/lti/test")
-    public String ltiEntry(HttpServletRequest request, Authentication auth) {
+    public String ltiEntry(HttpServletRequest request,  
+            Authentication auth, LtiLaunchData data) {
         
-        LtiLaunchData data = (LtiLaunchData)request.getSession().getAttribute(LtiLaunchData.NAME);
+        // A new launch means any session we had should be invalidated
+        HttpSession session = request.getSession();
+        session.invalidate();
         
-        LOG.info("User: " + auth.getName());
-
-        LOG.info("Roles: " + 
+        // Create a new session and store the launch data in it
+        session = request.getSession();
+        session.setAttribute(LtiLaunchData.NAME, data);
+        
+        // Log the launch
+        LOG.info("Launch for Context id: " + data.getContext_id() +
+                " User: " + auth.getName() + 
+                " Roles: " + 
                 auth.getAuthorities().stream()
                         .map(a -> a.getAuthority())
-                        .reduce("", String::concat));
-        
-        LOG.info("Context id: " + data.get(LtiLaunchData.Parameter.CONTEXT_ID));
+                        .reduce("", String::concat) + " ");
         
         return "success";
     }

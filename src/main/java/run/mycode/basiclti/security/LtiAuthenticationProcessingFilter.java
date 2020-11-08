@@ -1,5 +1,8 @@
 package run.mycode.basiclti.security;
 
+import run.mycode.basiclti.model.LtiAuthentication;
+import run.mycode.basiclti.model.LtiPrincipal;
+import run.mycode.basiclti.model.LtiLaunchData;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -72,7 +75,7 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             // If the key is not known, quit with an error
             if (key == null) {
                 LOG.info("Invalid LTI Consumer Key");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
                 return;
             }
                 
@@ -92,12 +95,12 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             // send an error message and quit
             catch (InvalidNonceException e) {
                 LOG.info("Nonce validation failed: " + e.getLocalizedMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
                 return;
             }
             catch (LtiVerificationException e) {
                 LOG.info("LTI Verification failed: " + e.getLocalizedMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
                 return;
             }
             
@@ -110,19 +113,14 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             // If the checks passed, we have a valid launch request
             launch = result.getLtiLaunchResult();
             
-            // Extract the launch data from the http request
-            LtiLaunchData data = new LtiLaunchData(request);
+            String name = LtiLaunchData.getName(request);
             
             // Get the user information from the launch data, build into an
             // authenticated user
-            LtiPrincipal user = new LtiPrincipal(launch.getUser(), data);
+            LtiPrincipal user = new LtiPrincipal(launch.getUser(), name);
             auth = new LtiAuthentication(key, user, true);
             SecurityContextHolder.getContext().setAuthentication(auth);
-    
-            // Add the launch data to the http session
-            HttpSession session = request.getSession();
-            session.setAttribute(LtiLaunchData.NAME, data);
-    
+        
             LOG.info("LTI Verification succeeded");
         }
         
