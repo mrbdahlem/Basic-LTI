@@ -7,11 +7,12 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 /**
- *
+ * An in-memory nonce registration and validation service
+ * 
  * @author dahlem.brian
  */
 @Service
-public class NonceServiceImpl implements NonceService {
+public class SimpleNonceServiceImpl implements NonceService {
     private final Map<String, List<Nonce>> nonces;
     private final long window;
     
@@ -22,7 +23,7 @@ public class NonceServiceImpl implements NonceService {
      * @param windowSeconds the number of seconds within a nonce cannot be
      *                      repeated (half before, half after current time)
      */
-    public NonceServiceImpl(long windowSeconds) {
+    public SimpleNonceServiceImpl(long windowSeconds) {
         nonces = new HashMap<>();
         this.window = windowSeconds;
     }
@@ -32,7 +33,7 @@ public class NonceServiceImpl implements NonceService {
      * than once within a 10 minute window (5 minutes before, 5 after the 
      * current time)
      */
-    public NonceServiceImpl() {
+    public SimpleNonceServiceImpl() {
         this(600);
     }
 

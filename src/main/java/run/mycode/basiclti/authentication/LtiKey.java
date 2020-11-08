@@ -1,20 +1,17 @@
-package run.mycode.basiclti.persistence.model;
+package run.mycode.basiclti.authentication;
 
 /**
- * Basic information associating a consumer key with the signing secret and user
- * that administers the key
+ * Basic information associating a consumer key with the signing secret
  * 
  * @author dahlem.brian
  */
-public class LtiKey {
+public abstract class LtiKey {
     private String key;
     private String secret;
-    private User owner;
 
-    public LtiKey(String key, String secret, User owner) {
+    public LtiKey(String key, String secret) {
         this.key = key;
         this.secret = secret;
-        this.owner = owner;
     }
 
     public String getKey() {
@@ -31,13 +28,5 @@ public class LtiKey {
 
     public void setSecret(String secret) {
         this.secret = secret;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
     }
 }

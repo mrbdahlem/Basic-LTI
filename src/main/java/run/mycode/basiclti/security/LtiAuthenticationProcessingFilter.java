@@ -1,14 +1,13 @@
 package run.mycode.basiclti.security;
 
-import run.mycode.basiclti.model.LtiAuthentication;
-import run.mycode.basiclti.model.LtiPrincipal;
+import run.mycode.basiclti.authentication.LtiAuthentication;
+import run.mycode.basiclti.authentication.LtiPrincipal;
 import run.mycode.basiclti.model.LtiLaunchData;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.imsglobal.lti.launch.LtiLaunch;
@@ -21,10 +20,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import run.mycode.basiclti.persistence.model.LtiKey;
+import run.mycode.basiclti.authentication.LtiKey;
 import run.mycode.basiclti.service.InvalidNonceException;
-import run.mycode.basiclti.service.KeyService;
 import run.mycode.basiclti.service.NonceService;
+import run.mycode.basiclti.service.LtiKeyService;
 
 /**
  * LTI Authentication Processing Filter. This filter should be applied to
@@ -36,7 +35,8 @@ import run.mycode.basiclti.service.NonceService;
 @Component
 public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
     private static final Logger LOG = LogManager.getLogger(LtiAuthenticationProcessingFilter.class);
-    private final KeyService keyService;
+    
+    private final LtiKeyService keyService;
     private final NonceService nonceService;
     
     /**
@@ -47,7 +47,7 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
      *                  the request's consumer key
      * @param nonceService A service that can verify that nonces are not reused
      */
-    public LtiAuthenticationProcessingFilter(KeyService keyService, 
+    public LtiAuthenticationProcessingFilter(LtiKeyService keyService, 
             NonceService nonceService) {
         this.keyService = keyService;
         this.nonceService = nonceService;
@@ -59,7 +59,6 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             throws AuthenticationException, ServletException, IOException {
                 Authentication auth;
         
-        LtiKey key;
         LtiLaunch launch;
         LtiVerificationResult result;
         
@@ -70,10 +69,10 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             
             // load the information for the consumer key associated with the
             // resource request
-            key = keyService.getKeyInfo(consumerKey);
-
+            LtiKey credential = keyService.getKey(consumerKey);
+            
             // If the key is not known, quit with an error
-            if (key == null) {
+            if (credential == null) {
                 LOG.info("Invalid LTI Consumer Key");
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
                 return;
@@ -88,7 +87,7 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
 
                 // Verify that the LTI request has been properly signed
                 LtiVerifier ltiVerifier = new LtiOauthVerifier();
-                result = ltiVerifier.verify(request, key.getSecret());
+                result = ltiVerifier.verify(request, credential.getSecret());
             }
             
             // If an error occurrs, or the verification is not successful,
@@ -118,7 +117,7 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             // Get the user information from the launch data, build into an
             // authenticated user
             LtiPrincipal user = new LtiPrincipal(launch.getUser(), name);
-            auth = new LtiAuthentication(key, user, true);
+            auth = new LtiAuthentication(credential, user, true);
             SecurityContextHolder.getContext().setAuthentication(auth);
         
             LOG.info("LTI Verification succeeded");
