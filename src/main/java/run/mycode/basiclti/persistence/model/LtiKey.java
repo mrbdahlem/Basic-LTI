@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.persistence.model;
+package run.mycode.basiclti.persistence.model;
 
 /**
  * Basic information associating a consumer key with the signing secret and user

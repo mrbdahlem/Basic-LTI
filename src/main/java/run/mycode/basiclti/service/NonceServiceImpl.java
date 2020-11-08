@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.service;
+package run.mycode.basiclti.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;

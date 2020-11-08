@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.persistence.model;
+package run.mycode.basiclti.persistence.model;
 
 /**
  * A sample user - this would be an instructor/admin that adds this tool to

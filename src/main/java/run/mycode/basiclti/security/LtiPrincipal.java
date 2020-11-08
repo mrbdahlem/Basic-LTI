@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.security;
+package run.mycode.basiclti.security;
 
 import java.security.Principal;
 import java.util.List;

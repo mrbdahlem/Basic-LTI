@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.security;
+package run.mycode.basiclti.security;
 
 import java.io.IOException;
 import javax.servlet.FilterChain;
@@ -18,10 +18,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import run.mycode.basicltitest.persistence.model.LtiKey;
-import run.mycode.basicltitest.service.InvalidNonceException;
-import run.mycode.basicltitest.service.KeyService;
-import run.mycode.basicltitest.service.NonceService;
+import run.mycode.basiclti.persistence.model.LtiKey;
+import run.mycode.basiclti.service.InvalidNonceException;
+import run.mycode.basiclti.service.KeyService;
+import run.mycode.basiclti.service.NonceService;
 
 /**
  * LTI Authentication Processing Filter. This filter should be applied to

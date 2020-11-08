@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.service;
+package run.mycode.basiclti.service;
 
 /**
  * A service to validate that a nonce hasn't been used by a particular consumer

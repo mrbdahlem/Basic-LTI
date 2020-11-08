@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.controller;
+package run.mycode.basiclti.controller;
 
 import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
-import run.mycode.basicltitest.security.LtiLaunchData;
+import run.mycode.basiclti.security.LtiLaunchData;
 
 /**
  *

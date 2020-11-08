@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.security;
+package run.mycode.basiclti.security;
 
 import java.util.HashMap;
 import java.util.Map;

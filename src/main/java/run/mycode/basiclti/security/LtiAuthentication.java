@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.security;
+package run.mycode.basiclti.security;
 
 import java.util.Collection;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import run.mycode.basicltitest.persistence.model.LtiKey;
+import run.mycode.basiclti.persistence.model.LtiKey;
 
 /**
  * A Spring Authentication for LTI invocations, associating a tool user 

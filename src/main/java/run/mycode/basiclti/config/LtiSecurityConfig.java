@@ -1,4 +1,4 @@
-package run.mycode.basicltitest.config;
+package run.mycode.basiclti.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -6,9 +6,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import run.mycode.basicltitest.security.LtiAuthenticationProcessingFilter;
-import run.mycode.basicltitest.service.KeyService;
-import run.mycode.basicltitest.service.NonceService;
+import run.mycode.basiclti.security.LtiAuthenticationProcessingFilter;
+import run.mycode.basiclti.service.KeyService;
+import run.mycode.basiclti.service.NonceService;
 
 @Configuration
 @Order(1)

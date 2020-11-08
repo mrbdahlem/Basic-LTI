@@ -1,7 +1,7 @@
-package run.mycode.basicltitest.service;
+package run.mycode.basiclti.service;
 
-import run.mycode.basicltitest.persistence.model.LtiKey;
-import run.mycode.basicltitest.persistence.model.User;
+import run.mycode.basiclti.persistence.model.LtiKey;
+import run.mycode.basiclti.persistence.model.User;
 
 /**
  * A service associating consumer keys with the secret or the user that owns it

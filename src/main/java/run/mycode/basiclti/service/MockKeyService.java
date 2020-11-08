@@ -1,12 +1,12 @@
-package run.mycode.basicltitest.service;
+package run.mycode.basiclti.service;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
-import run.mycode.basicltitest.persistence.model.LtiKey;
-import run.mycode.basicltitest.persistence.model.User;
+import run.mycode.basiclti.persistence.model.LtiKey;
+import run.mycode.basiclti.persistence.model.User;
 
 @Service
 public class MockKeyService implements KeyService {
