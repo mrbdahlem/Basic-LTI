@@ -11,6 +11,7 @@ import run.mycode.basiclti.model.LtiLaunchData;
 
 /**
  *
+ * TODO: Move controller and related demo files to a separate project
  * @author dahlem.brian
  */
 @Controller

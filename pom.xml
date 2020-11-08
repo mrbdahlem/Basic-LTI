@@ -11,7 +11,7 @@
     <groupId>run.mycode</groupId>
     <artifactId>basiclti</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Basic Lti</name>
+    <name>BasicLti</name>
     <description>LTI Demo</description>
 
     <properties>
