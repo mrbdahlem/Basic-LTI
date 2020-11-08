@@ -4,14 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.stereotype.Service;
 
 /**
  * An in-memory nonce registration and validation service
  * 
  * @author dahlem.brian
  */
-@Service
 public class SimpleNonceServiceImpl implements NonceService {
     private final Map<String, List<Nonce>> nonces;
     private final long window;
