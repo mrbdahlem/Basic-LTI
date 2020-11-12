@@ -32,4 +32,4 @@ You'll need to download and ```mvn install``` this repo for now to add it to you
 
 You can see a demo of how this authentication system is used in the [Basic LTI Demo](https://github.com/mrbdahlem/Basic-Lti-Demo).
 
-You will need to provide a ```KeyService``` as shown in the Basic LTI Demo that can retrieve consumer key/shared secret pairs.
+You will need to provide an ```LtiKeyService``` that implements the ```run.mycode.basiclti.service.LtiKeyService``` interface as shown in the [Basic LTI Demo](https://github.com/mrbdahlem/Basic-Lti-Demo) that can retrieve consumer key/shared secret pairs.
