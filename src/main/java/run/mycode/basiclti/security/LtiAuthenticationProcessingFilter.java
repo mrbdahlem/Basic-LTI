@@ -4,7 +4,6 @@ import run.mycode.basiclti.authentication.LtiAuthentication;
 import run.mycode.basiclti.authentication.LtiPrincipal;
 import run.mycode.basiclti.model.LtiLaunchData;
 import java.io.IOException;
-import java.util.logging.Level;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -28,8 +27,6 @@ import run.mycode.basiclti.authentication.LtiKey;
 import run.mycode.basiclti.service.InvalidNonceException;
 import run.mycode.basiclti.service.NonceService;
 import run.mycode.basiclti.service.LtiKeyService;
-
-import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
 /**
  * LTI Authentication Processing Filter. This filter should be applied to
@@ -68,13 +65,12 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
     }
     
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
+    public void doFilterInternal(HttpServletRequest request, 
             HttpServletResponse response, FilterChain chain)
             throws AuthenticationException, ServletException, IOException {
         
         LtiLaunch launch;
         LtiVerificationResult result;
-        
         
         Authentication preAuth = SecurityContextHolder.getContext().getAuthentication();
         // If the request is a POST request 
@@ -152,7 +148,7 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             LtiPrincipal user = new LtiPrincipal(launch.getUser(), name);
             Authentication auth = new LtiAuthentication(credential, user, true);
             
-            HttpSession session = request.getSession();
+            //HttpSession session = request.getSession();
             SecurityContext sc = SecurityContextHolder.getContext();
             sc.setAuthentication(auth);
         
