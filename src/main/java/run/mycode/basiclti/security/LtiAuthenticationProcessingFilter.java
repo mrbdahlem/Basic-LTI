@@ -4,10 +4,12 @@ import run.mycode.basiclti.authentication.LtiAuthentication;
 import run.mycode.basiclti.authentication.LtiPrincipal;
 import run.mycode.basiclti.model.LtiLaunchData;
 import java.io.IOException;
+import java.util.logging.Level;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.imsglobal.lti.launch.LtiLaunch;
@@ -15,8 +17,10 @@ import org.imsglobal.lti.launch.LtiOauthVerifier;
 import org.imsglobal.lti.launch.LtiVerificationException;
 import org.imsglobal.lti.launch.LtiVerificationResult;
 import org.imsglobal.lti.launch.LtiVerifier;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,6 +28,8 @@ import run.mycode.basiclti.authentication.LtiKey;
 import run.mycode.basiclti.service.InvalidNonceException;
 import run.mycode.basiclti.service.NonceService;
 import run.mycode.basiclti.service.LtiKeyService;
+
+import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
 /**
  * LTI Authentication Processing Filter. This filter should be applied to
@@ -65,15 +71,35 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response, FilterChain chain)
             throws AuthenticationException, ServletException, IOException {
-                Authentication auth;
         
         LtiLaunch launch;
         LtiVerificationResult result;
         
-        // If the request has not already been authenticated
+        
         Authentication preAuth = SecurityContextHolder.getContext().getAuthentication();
-        if (preAuth == null || !preAuth.isAuthenticated()) {
-            String consumerKey = request.getParameter("oauth_consumer_key");        
+        // If the request is a POST request 
+        if (HttpMethod.POST.matches(request.getMethod()) &&
+                // that has not already been authenticated
+                (preAuth == null || 
+                !preAuth.isAuthenticated() ||
+                // Or the request is a new lti launch request
+                "basic-lti-launch-request".equalsIgnoreCase(request.getParameter("lti_message_type"))))
+        {
+            String consumerKey = request.getParameter("oauth_consumer_key");
+            
+            // If there is no consumer key
+            if (consumerKey == null) {
+                // If this is a new lti launch request, then verification has failed
+                if ("basic-lti-launch-request".equalsIgnoreCase(request.getParameter("lti_message_type"))) {
+                    LOG.info("Missing LTI Consumer Key");
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
+                    return;
+                }
+                
+                // Continue through the filter chain
+                chain.doFilter(request, response);
+                return;
+            }
             
             // load the information for the consumer key associated with the
             // resource request
@@ -97,7 +123,6 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
                 LtiVerifier ltiVerifier = new LtiOauthVerifier();
                 result = ltiVerifier.verify(request, credential.getSecret());
             }
-            
             // If an error occurrs, or the verification is not successful,
             // send an error message and quit
             catch (InvalidNonceException e) {
@@ -125,8 +150,11 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
             // Get the user information from the launch data, build into an
             // authenticated user
             LtiPrincipal user = new LtiPrincipal(launch.getUser(), name);
-            auth = new LtiAuthentication(credential, user, true);
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            Authentication auth = new LtiAuthentication(credential, user, true);
+            
+            HttpSession session = request.getSession();
+            SecurityContext sc = SecurityContextHolder.getContext();
+            sc.setAuthentication(auth);
         
             LOG.info("LTI Verification succeeded");
         }
