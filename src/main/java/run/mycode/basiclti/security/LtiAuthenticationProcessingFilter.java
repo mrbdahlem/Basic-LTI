@@ -3,12 +3,7 @@ package run.mycode.basiclti.security;
 import run.mycode.basiclti.authentication.LtiAuthentication;
 import run.mycode.basiclti.authentication.LtiPrincipal;
 import run.mycode.basiclti.model.LtiLaunchData;
-import java.io.IOException;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.imsglobal.lti.launch.LtiLaunch;
@@ -19,10 +14,9 @@ import org.imsglobal.lti.launch.LtiVerifier;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 import run.mycode.basiclti.authentication.LtiKey;
 import run.mycode.basiclti.service.InvalidNonceException;
 import run.mycode.basiclti.service.NonceService;
@@ -36,7 +30,8 @@ import run.mycode.basiclti.service.LtiKeyService;
  * @author dahlem.brian
  */
 @Component
-public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
+public class LtiAuthenticationProcessingFilter extends AbstractPreAuthenticatedProcessingFilter {
+    
     private static final Logger LOG = LogManager.getLogger(LtiAuthenticationProcessingFilter.class);
     
     private final LtiKeyService keyService;
@@ -51,7 +46,9 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
      * @param nonceService A service that can verify that nonces are not reused
      */
     public LtiAuthenticationProcessingFilter(LtiKeyService keyService, 
-            NonceService nonceService) {
+            NonceService nonceService) 
+    {
+        super();
         
         if (keyService == null) {
             throw new IllegalArgumentException("KeyService must be specified");
@@ -62,100 +59,139 @@ public class LtiAuthenticationProcessingFilter extends OncePerRequestFilter {
         
         this.keyService = keyService;
         this.nonceService = nonceService;
+        
+        // The principal may change on each LTI launch
+        setCheckForPrincipalChanges(true);
+        setInvalidateSessionOnPrincipalChange(true);
+        
     }
     
-    @Override
-    public void doFilterInternal(HttpServletRequest request, 
-            HttpServletResponse response, FilterChain chain)
-            throws AuthenticationException, ServletException, IOException {
+    /**
+     * Retrieve or verify the LTI authentication for a given request
+     * @param request the POST request to verify
+     * 
+     * @return An Authentication containing the LTI Principal and LTI Key credentials
+     * @throws AuthenticationException if LTI Verification fails
+     */
+    private Authentication getAuth(HttpServletRequest request)
+            throws AuthenticationException {
         
         LtiLaunch launch;
         LtiVerificationResult result;
         
-        Authentication preAuth = SecurityContextHolder.getContext().getAuthentication();
-        // If the request is a POST request 
-        if (HttpMethod.POST.matches(request.getMethod()) &&
-                // that has not already been authenticated
-                (preAuth == null || 
-                !preAuth.isAuthenticated() ||
-                // Or the request is a new lti launch request
-                "basic-lti-launch-request".equalsIgnoreCase(request.getParameter("lti_message_type"))))
-        {
-            String consumerKey = request.getParameter("oauth_consumer_key");
-            
-            // If there is no consumer key
-            if (consumerKey == null) {
-                // If this is a new lti launch request, then verification has failed
-                if ("basic-lti-launch-request".equalsIgnoreCase(request.getParameter("lti_message_type"))) {
-                    LOG.info("Missing LTI Consumer Key");
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
-                    return;
-                }
-                
-                // Continue through the filter chain
-                chain.doFilter(request, response);
-                return;
-            }
-            
-            // load the information for the consumer key associated with the
-            // resource request
-            LtiKey credential = keyService.getKey(consumerKey);
-            
-            // If the key is not known, quit with an error
-            if (credential == null) {
-                LOG.info("Invalid LTI Consumer Key");
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
-                return;
-            }
-                
-            try {
-                // Verify the nonce in this request has not been reused when
-                // paired with the timestamp to prevent replay attacks
-                String nonce = request.getParameter("oauth_nonce");
-                long timestamp = Long.parseLong(request.getParameter("oauth_timestamp"));
-                nonceService.validateNonce(consumerKey, nonce, timestamp);
-
-                // Verify that the LTI request has been properly signed
-                LtiVerifier ltiVerifier = new LtiOauthVerifier();
-                result = ltiVerifier.verify(request, credential.getSecret());
-            }
-            // If an error occurrs, or the verification is not successful,
-            // send an error message and quit
-            catch (InvalidNonceException e) {
-                LOG.info("Nonce validation failed: " + e.getLocalizedMessage());
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
-                return;
-            }
-            catch (LtiVerificationException e) {
-                LOG.info("LTI Verification failed: " + e.getLocalizedMessage());
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "LTI Verification failed");
-                return;
-            }
-            
-            if (!result.getSuccess()) {
-                LOG.info("LTI Verification failed");
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "LTI Verification failed");
-                return;
-            }
-
-            // If the checks passed, we have a valid launch request
-            launch = result.getLtiLaunchResult();
-            
-            String name = LtiLaunchData.getName(request);
-            
-            // Get the user information from the launch data, build into an
-            // authenticated user
-            LtiPrincipal user = new LtiPrincipal(launch.getUser(), name);
-            Authentication auth = new LtiAuthentication(credential, user, true);
-            
-            //HttpSession session = request.getSession();
-            SecurityContext sc = SecurityContextHolder.getContext();
-            sc.setAuthentication(auth);
-        
-            LOG.info("LTI Verification succeeded");
+        // If this request has already been authenticated
+        Authentication auth = (Authentication)request.getAttribute("LTI_AUTH");
+        if (auth != null) {
+            // Return the authentication token
+            return auth;
         }
         
-        // Continue through the filter chain
-        chain.doFilter(request, response);
+        auth = SecurityContextHolder.getContext().getAuthentication();
+        
+        // a new LTI authentication can only happen on POST requests
+        if (!HttpMethod.POST.matches(request.getMethod())) {
+            setContinueFilterChainOnUnsuccessfulAuthentication(true);
+            return auth;
+        }
+        
+        // lti launch requests MUST be authenticated
+        String launchType = request.getParameter("lti_message_type");
+        if ("basic-lti-launch-request".equalsIgnoreCase(launchType)) {
+            setContinueFilterChainOnUnsuccessfulAuthentication(false);
+            SecurityContextHolder.clearContext();
+        }
+        
+        String consumerKey = request.getParameter("oauth_consumer_key");
+
+        // If there is no consumer key
+        if (consumerKey == null) {
+            throw new LtiAuthenticationException("No consumer key provided");
+        }
+
+        // load the information for the consumer key associated with the
+        // resource request
+        LtiKey credential = keyService.getKey(consumerKey);
+
+        // If the key is not known, quit with an error
+        if (credential == null) {
+            LOG.info("Invalid LTI Consumer Key");
+            throw new LtiAuthenticationException("LTI Verification Failed");
+        }
+
+        try {
+            // Verify the nonce in this request has not been reused when
+            // paired with the timestamp to prevent replay attacks
+            String nonce = request.getParameter("oauth_nonce");
+            long timestamp = Long.parseLong(request.getParameter("oauth_timestamp"));
+            nonceService.validateNonce(consumerKey, nonce, timestamp);
+
+            // Verify that the LTI request has been properly signed
+            LtiVerifier ltiVerifier = new LtiOauthVerifier();
+            result = ltiVerifier.verify(request, credential.getSecret());
+        }
+        // If an error occurrs, or the verification is not successful,
+        // send an error message and quit
+        catch (InvalidNonceException e) {
+            LOG.info("Nonce validation failed: " + e.getLocalizedMessage());
+            throw new LtiAuthenticationException("LTI Verification Failed");
+        }
+        catch (LtiVerificationException e) {
+            LOG.info("LTI Verification failed: " + e.getLocalizedMessage());
+            throw new LtiAuthenticationException("LTI Verification Failed");
+        }
+
+        if (!result.getSuccess()) {
+            LOG.info("LTI Verification failed");
+            throw new LtiAuthenticationException("LTI Verification Failed");
+        }
+
+        // If the checks passed, we have a valid launch request
+        launch = result.getLtiLaunchResult();
+
+        String name = LtiLaunchData.getName(request);
+
+        // Get the user information from the launch data, build into an
+        // authenticated user
+        LtiPrincipal user = new LtiPrincipal(launch.getUser(), name);
+        auth = new LtiAuthentication(credential, user, true);
+
+        request.setAttribute("LTI_AUTH", auth);
+        LOG.info("LTI Verification succeeded");
+        
+        return auth;
+    }
+
+    @Override
+    protected Object getPreAuthenticatedPrincipal(HttpServletRequest request) { 
+        
+        Authentication auth = getAuth(request);
+        if (auth == null) {
+            LOG.info ("NULL Authentication token " + request.getServletPath());
+            return null;
+        }
+        if (auth.getPrincipal() == null) {
+            LOG.info ("NULL Authentication principal");
+            return null;
+        }
+        LOG.info ("Retrieved principal");
+        
+        return auth.getPrincipal();
+    }
+
+    @Override
+    protected Object getPreAuthenticatedCredentials(HttpServletRequest request) {
+
+        Authentication auth = getAuth(request);
+        if (auth == null) {
+            LOG.info ("NULL Authentication token " + request.getServletPath());
+            return null;
+        }
+        if (auth.getCredentials() == null) {
+            LOG.info ("NULL Authentication credentials");
+            return null;
+        }
+        LOG.info ("Retrieved credentials");
+        
+        return auth.getCredentials();
     }
 }

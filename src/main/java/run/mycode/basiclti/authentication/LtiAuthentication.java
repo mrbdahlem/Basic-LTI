@@ -68,7 +68,7 @@ public class LtiAuthentication implements Authentication {
             this.authenticated = false;
         }
         else {
-            throw new IllegalArgumentException("Cannot raise authenticate");
+            throw new IllegalArgumentException("Cannot authenticate unauthenticated token");
         }
     }
 
